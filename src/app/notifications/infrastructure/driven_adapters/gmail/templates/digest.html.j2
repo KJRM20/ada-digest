@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ada · Digest Diario</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Helvetica, Arial, sans-serif;
+      color: #18181b;
+    }
+    .wrapper {
+      max-width: 640px;
+      margin: 32px auto;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .header {
+      background: #18181b;
+      padding: 28px 32px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+    }
+    .header p {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: #a1a1aa;
+    }
+    .body {
+      padding: 28px 32px;
+    }
+    .section {
+      margin-bottom: 36px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #71717a;
+      border-bottom: 1px solid #e4e4e7;
+      padding-bottom: 8px;
+      margin: 0 0 16px;
+    }
+    .news-item {
+      margin-bottom: 18px;
+    }
+    .news-item a {
+      font-size: 15px;
+      font-weight: 600;
+      color: #18181b;
+      text-decoration: none;
+    }
+    .news-item a:hover {
+      text-decoration: underline;
+    }
+    .news-item p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: #52525b;
+      line-height: 1.5;
+    }
+    .curious-fact {
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: #fafafa;
+      border-left: 3px solid #18181b;
+      border-radius: 0 4px 4px 0;
+    }
+    .curious-fact span {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #71717a;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .curious-fact p {
+      margin: 0;
+      font-size: 13px;
+      color: #3f3f46;
+      line-height: 1.55;
+    }
+    .footer {
+      background: #fafafa;
+      border-top: 1px solid #e4e4e7;
+      padding: 20px 32px;
+      text-align: center;
+    }
+    .footer p {
+      margin: 0;
+      font-size: 11px;
+      color: #a1a1aa;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>Ada · Digest Diario</h1>
+      <p>{{ generated_at }} &mdash; Noticias técnicas para programadores</p>
+    </div>
+
+    <div class="body">
+      {% for section in sections %}
+      <div class="section">
+        <h2 class="section-title">{{ section.category_label }}</h2>
+
+        {% for item in section.news_items %}
+        <div class="news-item">
+          <a href="{{ item.url }}" target="_blank">{{ item.title }}</a>
+          <p>{{ item.summary }}</p>
+        </div>
+        {% endfor %}
+
+        {% if section.curious_fact %}
+        <div class="curious-fact">
+          <span>Dato curioso</span>
+          <p>{{ section.curious_fact }}</p>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="footer">
+      <p>
+        Generado por Ada &mdash; tu agente personal de noticias técnicas.<br />
+        Este correo fue enviado de forma automática.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
