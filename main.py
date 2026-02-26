@@ -1,19 +1,21 @@
+import sys
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from src.app.agent.infrastructure.driving_adapters.config.dependencies.generate_daily_digest_config import (
-    get_generate_daily_digest_use_case,
-)
-from src.app.notifications.infrastructure.driving_adapters.config.dependencies.send_daily_digest_config import (
-    get_send_daily_digest_use_case,
+from src.app.agent.infrastructure.driving_adapters.config.dependencies.scheduler_config import (
+    get_digest_scheduler,
 )
 
 
 def main() -> None:
-    digest = get_generate_daily_digest_use_case().execute()
-    get_send_daily_digest_use_case().execute(digest)
-    print("Digest enviado correctamente.")
+    scheduler = get_digest_scheduler()
+
+    if "--once" in sys.argv:
+        scheduler.run_once()
+    else:
+        scheduler.start()
 
 
 if __name__ == "__main__":
