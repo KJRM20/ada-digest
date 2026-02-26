@@ -10,9 +10,9 @@ packages = [{include = "src"}]
 python = "^3.11"
 
 # Agente y razonamiento
-langchain = "^0.3"
+langchain = "^1.0"
 langchain-google-genai = "^2.0"
-langgraph = "^0.2"
+langgraph = "^1.0"
 
 # Envío de correo
 simplegmail = "^4.1"
@@ -25,6 +25,10 @@ lxml = "^5.2"
 
 # Utilidades
 python-dotenv = "^1.0"
+jinja2 = "^3.1"
+pydantic = "^2.12.5"
+langchain-openai = "^1.1.10"
+langchain-groq = "^1.1.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0"
