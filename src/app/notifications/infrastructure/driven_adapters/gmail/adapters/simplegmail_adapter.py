@@ -2,15 +2,20 @@
 
 Carga credenciales OAuth desde archivos en disco:
 
-- **Desarrollo local:** .secrets/client_secret.json y .secrets/gmail-token.json
-- **Producción (Render):** /etc/secrets/client_secret.json y
-  /etc/secrets/gmail-token.json (Secret Files de Render)
+- **Desarrollo local:** .secrets/client_secret.json y
+  .secrets/gmail-token.json
+- **Producción (Render):** /etc/secrets/ (Secret Files montados
+  como symlinks, se copian a /tmp para compatibilidad con
+  oauth2client).
 
-Las rutas se configuran vía GMAIL_CLIENT_SECRET_PATH y GMAIL_TOKEN_PATH.
+Las rutas se configuran vía GMAIL_CLIENT_SECRET_PATH y
+GMAIL_TOKEN_PATH.
 """
 
 import logging
 import os
+import shutil
+import tempfile
 from pathlib import Path
 
 from simplegmail import Gmail
@@ -29,6 +34,19 @@ _DEFAULT_TOKEN = str(
 )
 
 
+def _resolve_path(path: str) -> str:
+    """Copy symlinked files to /tmp so oauth2client accepts them."""
+    if os.path.islink(path):
+        suffix = Path(path).suffix
+        tmp = tempfile.NamedTemporaryFile(
+            delete=False, suffix=suffix, prefix="gmail_"
+        )
+        shutil.copy2(path, tmp.name)
+        logger.info("Copied symlink %s → %s", path, tmp.name)
+        return tmp.name
+    return path
+
+
 class SimplegmailAdapter:
     """Driven adapter para envío de correo con Gmail."""
 
@@ -37,6 +55,10 @@ class SimplegmailAdapter:
             "GMAIL_CLIENT_SECRET_PATH", _DEFAULT_SECRET
         )
         token_path = os.environ.get("GMAIL_TOKEN_PATH", _DEFAULT_TOKEN)
+
+        # Resolve symlinks (Render Secret Files)
+        secret_path = _resolve_path(secret_path)
+        token_path = _resolve_path(token_path)
 
         logger.info(
             "Gmail credentials: secret=%s, token=%s",
