@@ -5,20 +5,23 @@ diario para programadores y lo envía por correo en formato HTML.
 
 ## ¿Qué hace Ada?
 
-Cada día:
+Dos veces al día (mañana y noche):
 
 1. Consulta novedades de IA aplicada al desarrollo.
 2. Recolecta noticias de programación en general.
-3. Incluye curiosidades útiles de algoritmos y código.
-4. Organiza el contenido para lectura rápida por desarrolladores.
-5. Envía un correo HTML al Gmail personal configurado.
+3. Busca datos curiosos y educativos sobre algoritmos.
+4. Genera un digest estructurado y legible.
+5. Renderiza HTML con template Jinja2.
+6. Envía un correo al Gmail personal configurado.
 
 ## Tecnologías
 
-- Python
-- LangChain
-- Gemini API
-- pygmail
+- Python 3.11+
+- LangChain + LangGraph
+- Groq API (modelos open-source vía Groq)
+- simplegmail (Gmail API via OAuth2)
+- Jinja2 para templates HTML
+- schedule + pytz para jobs diarios
 - Arquitectura hexagonal + clean architecture
 - Poetry para gestión de dependencias y entorno
 
@@ -63,13 +66,60 @@ poetry shell
 
 ## Ejecución
 
+### Scheduler (modo producción)
+
 Desde la raíz del proyecto:
 
 ```bash
 poetry run python main.py
 ```
 
-## Configuración de desarrollo
+Inicia el scheduler que ejecuta automáticamente:
+- **08:00** (hora Colombia): digest de mañana
+- **20:00** (hora Colombia): digest de noche
+
+Los horarios y timezone son configurables en `.env`:
+
+```dotenv
+MORNING_DIGEST_TIME=08:00
+EVENING_DIGEST_TIME=20:00
+DIGEST_TIMEZONE=America/Bogota
+```
+
+### Ejecución única (desarrollo/testing)
+
+Para ejecutar una sola vez sin scheduler:
+
+```bash
+poetry run python main.py --once
+```
+
+Útil para debugging o pruebas puntuales.
+
+## Configuración requerida
+
+Crear o completar `.env` en la raíz con:
+
+```dotenv
+# LLM API
+GROQ_API_KEY=your_groq_api_key_here
+
+# Gmail (simplegmail via OAuth2)
+GMAIL_SENDER=your_gmail@gmail.com
+GMAIL_RECIPIENT=your_gmail@gmail.com
+GMAIL_CLIENT_SECRET_PATH=.secrets/client_secret.json
+GMAIL_TOKEN_PATH=.secrets/gmail-token.json
+
+# Scheduler (opcional, si no se define usa defaults)
+MORNING_DIGEST_TIME=08:00
+EVENING_DIGEST_TIME=20:00
+DIGEST_TIMEZONE=America/Bogota
+```
+
+**Nota sobre Gmail:**
+Requiere `client_secret.json` descargado desde la
+[Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+En la primera ejecución se abrirá el navegador para autenticación OAuth2.
 
 - Formato con Black al guardar.
 - Longitud máxima de línea: 79.
