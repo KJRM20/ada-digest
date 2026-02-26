@@ -171,33 +171,27 @@ En **Environment** del dashboard, configura:
 | `GROQ_API_KEY` | `gsk_...` | Requerida - obtener en [Groq Console](https://console.groq.com) |
 | `GMAIL_SENDER` | `tu@gmail.com` | Email remitente |
 | `GMAIL_RECIPIENT` | `tu@gmail.com` | Email destinatario |
-| `GMAIL_CLIENT_SECRET_JSON` | `{"installed":{...}}` | JSON completo de `client_secret.json` (ver paso 4) |
-| `GMAIL_TOKEN_JSON` | `{"access_token":...}` | JSON completo de `gmail-token.json` (ver paso 4) |
 | `MORNING_DIGEST_TIME` | `08:00` | Opcional - hora del digest matutino |
 | `EVENING_DIGEST_TIME` | `20:00` | Opcional - hora del digest nocturno |
 | `DIGEST_TIMEZONE` | `America/Bogota` | Opcional - zona horaria IANA |
 
 #### 4. Configurar secretos OAuth de Gmail
 
-El adapter de Gmail soporta **dos modos** de carga de credenciales:
+Render ofrece **Secret Files**: archivos que se montan automáticamente en `/etc/secrets/<filename>` durante el build y en runtime.
 
-**Modo producción (Render):** Variables de entorno con JSON completo.
+1. En Render Dashboard → tu servicio → **Environment** → **Secret Files**
+2. Click en **"Add Secret File"** y crea dos archivos:
 
-1. Abre tu archivo local `.secrets/client_secret.json`
-2. Copia **todo el contenido** del archivo
-3. En Render Dashboard → **Environment** → **Add Environment Variable**
-4. Key: `GMAIL_CLIENT_SECRET_JSON`, Value: (pega el JSON completo)
-5. Repite con `.secrets/gmail-token.json` → Key: `GMAIL_TOKEN_JSON`
-6. Click en **"Save Changes"** → Render hará redeploy automáticamente
+| Filename | Contenido |
+|----------|-----------|
+| `client_secret.json` | Copia el contenido íntegro de tu `.secrets/client_secret.json` local |
+| `gmail-token.json` | Copia el contenido íntegro de tu `.secrets/gmail-token.json` local |
 
-El adapter detecta estas variables, las materializa como archivos temporales y las pasa a simplegmail. Esto funciona sin necesidad de Shell ni acceso a disco persistente.
+3. Click en **"Save Changes"** → Render hará redeploy automáticamente
 
-**Modo desarrollo (local):** Archivos en disco.
+Render monta los archivos en `/etc/secrets/client_secret.json` y `/etc/secrets/gmail-token.json`. Las variables `GMAIL_CLIENT_SECRET_PATH` y `GMAIL_TOKEN_PATH` en `render.yaml` ya apuntan a esas rutas.
 
-En desarrollo local, el adapter sigue usando los archivos `.secrets/client_secret.json` y `.secrets/gmail-token.json` vía las variables `GMAIL_CLIENT_SECRET_PATH` y `GMAIL_TOKEN_PATH`. No es necesario cambiar nada.
-
-> **Prioridad de resolución:**
-> `GMAIL_CLIENT_SECRET_JSON` > `GMAIL_CLIENT_SECRET_PATH` > default `.secrets/client_secret.json`
+> **Desarrollo local:** En local se siguen usando los archivos `.secrets/` sin cambios. Las rutas se configuran en `.env`.
 
 #### 5. Configurar UptimeRobot (mantener servicio activo)
 
@@ -236,11 +230,10 @@ Ahora UptimeRobot hará ping cada 5 min, manteniendo el servicio activo 24/7.
 
 | Problema | Solución |
 |----------|----------|
-| Build falla: `"--no-dev" does not exist` | Actualizar `render.yaml`: `poetry install --without dev` |
+| Build falla: `"--no-dev" does not exist` | Ya corregido: `render.yaml` usa `poetry install --without dev` |
 | Build falla: "Poetry not found" | `render.yaml` incluye `pip install poetry` en buildCommand |
 | Servicio se duerme | Configurar UptimeRobot (ver paso 5) |
-| Gmail: "credentials not found" | Verificar que `GMAIL_CLIENT_SECRET_JSON` y `GMAIL_TOKEN_JSON` están configuradas en Environment |
-| Gmail: "JSON no válido" | Revisar en los logs: "no contiene JSON válido". Asegurarse de copiar el JSON completo sin saltos de línea extra |
+| Gmail: "credentials not found" | Verificar que los Secret Files `client_secret.json` y `gmail-token.json` están creados en Environment → Secret Files |
 | Digest no se ejecuta | Verificar timezone y horarios en variables de entorno |
 | "ZoneInfoNotFoundError" | Proyecto incluye `tzdata` en dependencias (compatible con Render) |
 

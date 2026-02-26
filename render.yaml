@@ -27,12 +27,14 @@ services:
       - key: GMAIL_RECIPIENT
         sync: false
       
-      # Gmail OAuth secrets (JSON completo como env var)
-      # Copiar el contenido íntegro de cada archivo JSON
-      - key: GMAIL_CLIENT_SECRET_JSON
-        sync: false
-      - key: GMAIL_TOKEN_JSON
-        sync: false
+      # Gmail OAuth secrets (Secret Files de Render)
+      # Subir en Dashboard → Environment → Secret Files:
+      #   Filename: client_secret.json  → contenido de .secrets/client_secret.json
+      #   Filename: gmail-token.json    → contenido de .secrets/gmail-token.json
+      - key: GMAIL_CLIENT_SECRET_PATH
+        value: "/etc/secrets/client_secret.json"
+      - key: GMAIL_TOKEN_PATH
+        value: "/etc/secrets/gmail-token.json"
       
       # Scheduler configuration (opcionales, con defaults)
       - key: MORNING_DIGEST_TIME
