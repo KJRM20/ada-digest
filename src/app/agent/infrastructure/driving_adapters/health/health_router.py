@@ -1,8 +1,7 @@
 """Health check router.
 
 Este driving adapter expone un endpoint HTTP simple para
-verificar el estado del servicio. No tiene dependencias con
-el dominio ni casos de uso, respetando la separación de capas.
+verificar el estado del servicio.
 """
 
 from fastapi import APIRouter
