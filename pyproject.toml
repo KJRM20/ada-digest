@@ -32,6 +32,8 @@ langchain-groq = "^1.1.2"
 schedule = "^1.2"
 tzdata = "^2025.3"
 pytz = "^2025.2"
+fastapi = "^0.133.1"
+uvicorn = {extras = ["standard"], version = "^0.41.0"}
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0"

@@ -1,0 +1,40 @@
+# Render.com deployment configuration
+# Documentación: https://render.com/docs/blueprint-spec
+
+services:
+  # Ada Scheduler - Web Service
+  - type: web
+    name: ada-scheduler
+    env: python
+    region: oregon  # Cambiar si prefieres otra región (frankfurt, singapore, etc.)
+    plan: free
+    buildCommand: "pip install poetry && poetry install --no-dev"
+    startCommand: "poetry run uvicorn server:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    
+    envVars:
+      # Python version
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      
+      # Groq API (requerida)
+      - key: GROQ_API_KEY
+        sync: false  # Configurar manualmente en Render dashboard
+      
+      # Gmail credentials (requeridas)
+      - key: GMAIL_SENDER
+        sync: false
+      - key: GMAIL_RECIPIENT
+        sync: false
+      - key: GMAIL_CLIENT_SECRET_PATH
+        value: ".secrets/client_secret.json"
+      - key: GMAIL_TOKEN_PATH
+        value: ".secrets/gmail-token.json"
+      
+      # Scheduler configuration (opcionales, con defaults)
+      - key: MORNING_DIGEST_TIME
+        value: "08:00"
+      - key: EVENING_DIGEST_TIME
+        value: "20:00"
+      - key: DIGEST_TIMEZONE
+        value: "America/Bogota"
