@@ -171,62 +171,33 @@ En **Environment** del dashboard, configura:
 | `GROQ_API_KEY` | `gsk_...` | Requerida - obtener en [Groq Console](https://console.groq.com) |
 | `GMAIL_SENDER` | `tu@gmail.com` | Email remitente |
 | `GMAIL_RECIPIENT` | `tu@gmail.com` | Email destinatario |
+| `GMAIL_CLIENT_SECRET_JSON` | `{"installed":{...}}` | JSON completo de `client_secret.json` (ver paso 4) |
+| `GMAIL_TOKEN_JSON` | `{"access_token":...}` | JSON completo de `gmail-token.json` (ver paso 4) |
 | `MORNING_DIGEST_TIME` | `08:00` | Opcional - hora del digest matutino |
 | `EVENING_DIGEST_TIME` | `20:00` | Opcional - hora del digest nocturno |
 | `DIGEST_TIMEZONE` | `America/Bogota` | Opcional - zona horaria IANA |
 
 #### 4. Configurar secretos OAuth de Gmail
 
-**❌ Problema:** Render no soporta archivos de secretos en el build.
+El adapter de Gmail soporta **dos modos** de carga de credenciales:
 
-**✅ Solución:** Subir archivos manualmente vía Shell después del primer deploy.
+**Modo producción (Render):** Variables de entorno con JSON completo.
 
-Pasos:
+1. Abre tu archivo local `.secrets/client_secret.json`
+2. Copia **todo el contenido** del archivo
+3. En Render Dashboard → **Environment** → **Add Environment Variable**
+4. Key: `GMAIL_CLIENT_SECRET_JSON`, Value: (pega el JSON completo)
+5. Repite con `.secrets/gmail-token.json` → Key: `GMAIL_TOKEN_JSON`
+6. Click en **"Save Changes"** → Render hará redeploy automáticamente
 
-1. En el dashboard de tu servicio, click en **"Shell"** (menú lateral)
-2. Espera a que cargue la terminal interactiva
-3. Ejecuta los siguientes comandos:
+El adapter detecta estas variables, las materializa como archivos temporales y las pasa a simplegmail. Esto funciona sin necesidad de Shell ni acceso a disco persistente.
 
-```bash
-# Crear directorio de secretos
-mkdir -p .secrets
+**Modo desarrollo (local):** Archivos en disco.
 
-# Crear client_secret.json (reemplaza con tu contenido)
-cat > .secrets/client_secret.json << 'EOF'
-{
-  "installed": {
-    "client_id": "TU_CLIENT_ID.apps.googleusercontent.com",
-    "project_id": "tu-proyecto",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_secret": "TU_CLIENT_SECRET",
-    "redirect_uris": ["http://localhost"]
-  }
-}
-EOF
+En desarrollo local, el adapter sigue usando los archivos `.secrets/client_secret.json` y `.secrets/gmail-token.json` vía las variables `GMAIL_CLIENT_SECRET_PATH` y `GMAIL_TOKEN_PATH`. No es necesario cambiar nada.
 
-# Crear gmail-token.json (reemplaza con tu contenido)
-cat > .secrets/gmail-token.json << 'EOF'
-{
-  "access_token": "tu-access-token",
-  "client_id": "TU_CLIENT_ID.apps.googleusercontent.com",
-  "client_secret": "TU_CLIENT_SECRET",
-  "refresh_token": "tu-refresh-token",
-  "token_expiry": "2026-01-01T00:00:00Z",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  ...
-}
-EOF
-
-# Verificar que se crearon correctamente
-ls -la .secrets/
-```
-
-4. En el dashboard, ve a **Settings** → **Manual Deploy** → **"Clear build cache & deploy"**
-5. Verifica en los logs que simplegmail carga los tokens
-
-📄 **Instrucciones detalladas:** Ver `scripts/setup_secrets.sh`
+> **Prioridad de resolución:**
+> `GMAIL_CLIENT_SECRET_JSON` > `GMAIL_CLIENT_SECRET_PATH` > default `.secrets/client_secret.json`
 
 #### 5. Configurar UptimeRobot (mantener servicio activo)
 
@@ -259,34 +230,19 @@ Ahora UptimeRobot hará ping cada 5 min, manteniendo el servicio activo 24/7.
 
 - **750 horas/mes:** Suficiente para **1 servicio** corriendo 24/7 (~720h/mes)
 - **Sleep automático:** Si no hay tráfico HTTP por 15 min (mitigado con UptimeRobot)
-- **Archivos no persistentes:** `.secrets/` se pierde en redeploy (debe reconfigurarse vía Shell)
 - **CPU/RAM compartidos:** Rendimiento limitado pero suficiente para Ada
-
-### Alternativas al archivo de secretos
-
-Si prefieres evitar reconfigurar `.secrets/` en cada deploy:
-
-**Opción A: Variables de entorno con JSON completo**
-
-1. En Render Dashboard → Environment:
-   - `GMAIL_CLIENT_SECRET_JSON` = (pega todo el JSON de `client_secret.json`)
-   - `GMAIL_TOKEN_JSON` = (pega todo el JSON de `gmail-token.json`)
-
-2. Modifica el código para leer de env vars en lugar de archivos
-
-**Opción B: Usar servicio de secretos externo**
-- Google Secret Manager
-- AWS Secrets Manager (ambos tienen free tier)
 
 ### Troubleshooting
 
 | Problema | Solución |
 |----------|----------|
-| Build falla con "Poetry not found" | render.yaml incluye `pip install poetry` en buildCommand |
+| Build falla: `"--no-dev" does not exist` | Actualizar `render.yaml`: `poetry install --without dev` |
+| Build falla: "Poetry not found" | `render.yaml` incluye `pip install poetry` en buildCommand |
 | Servicio se duerme | Configurar UptimeRobot (ver paso 5) |
-| Gmail falla con "credentials not found" | Verificar que `.secrets/` existe y tiene los archivos correctos (paso 4) |
+| Gmail: "credentials not found" | Verificar que `GMAIL_CLIENT_SECRET_JSON` y `GMAIL_TOKEN_JSON` están configuradas en Environment |
+| Gmail: "JSON no válido" | Revisar en los logs: "no contiene JSON válido". Asegurarse de copiar el JSON completo sin saltos de línea extra |
 | Digest no se ejecuta | Verificar timezone y horarios en variables de entorno |
-| Logs: "ZoneInfoNotFoundError" | Proyecto incluye `tzdata` en dependencias (Windows/Render compatible) |
+| "ZoneInfoNotFoundError" | Proyecto incluye `tzdata` en dependencias (compatible con Render) |
 
 ### Comandos útiles
 
